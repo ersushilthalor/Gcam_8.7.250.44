@@ -75,6 +75,7 @@ jobs:
             --v1-signing-enabled true \
             --v2-signing-enabled true \
             --v3-signing-enabled true \
+            --min-sdk-version 1 \
             --ks "$RUNNER_TEMP/gcam-debug.keystore" \
             --ks-key-alias androiddebugkey \
             --ks-pass pass:android --key-pass pass:android \
