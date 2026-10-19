@@ -1,35 +1,85 @@
-name: Build APK
+name: Build GCam APK
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
 
-      - name: Setup Android SDK
+      - name: Set up Android SDK tools
         uses: android-actions/setup-android@v3
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Install Android build tools
+        run: sdkmanager "platform-tools" "build-tools;35.0.0"
 
-      - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Install Apktool
+        run: |
+          curl --fail --location --retry 3 \
+            https://github.com/iBotPeaches/Apktool/releases/download/v2.10.0/apktool_2.10.0.jar \
+            --output "$RUNNER_TEMP/apktool.jar"
+          printf '#!/usr/bin/env bash\nexec java -jar "%s" "$@"\n' "$RUNNER_TEMP/apktool.jar" > "$RUNNER_TEMP/apktool"
+          chmod +x "$RUNNER_TEMP/apktool"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          apktool --version
 
-      - name: Upload APK
+      - name: Validate decompiled APK project
+        run: |
+          test -f apktool.yml
+          test -f AndroidManifest.xml
+          test -d smali
+          test -d res
+          echo "Found apktool.yml, AndroidManifest.xml, smali and res."
+
+      - name: Rebuild APK with Apktool
+        run: |
+          mkdir -p build
+          apktool b . --output build/gcam-unsigned.apk
+
+      - name: Align APK
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -p -f 4 \
+            build/gcam-unsigned.apk build/gcam-aligned.apk
+
+      - name: Create debug signing key
+        run: |
+          keytool -genkeypair -v \
+            -keystore "$RUNNER_TEMP/gcam-debug.keystore" \
+            -storepass android -keypass android \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Sign APK
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign \
+            --ks "$RUNNER_TEMP/gcam-debug.keystore" \
+            --ks-key-alias androiddebugkey \
+            --ks-pass pass:android --key-pass pass:android \
+            --out build/GCam-8.7.250.44-debug.apk build/gcam-aligned.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose \
+            build/GCam-8.7.250.44-debug.apk
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: GCam-8.7.250.44-debug
+          path: build/GCam-8.7.250.44-debug.apk
+          if-no-files-found: error
+          retention-days: 14
