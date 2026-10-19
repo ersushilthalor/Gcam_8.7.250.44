@@ -72,11 +72,16 @@ jobs:
       - name: Sign APK
         run: |
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
             --ks "$RUNNER_TEMP/gcam-debug.keystore" \
             --ks-key-alias androiddebugkey \
             --ks-pass pass:android --key-pass pass:android \
             --out build/GCam-8.7.250.44-debug.apk build/gcam-aligned.apk
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose \
+            build/GCam-8.7.250.44-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -v 4 \
             build/GCam-8.7.250.44-debug.apk
 
       - name: Upload APK artifact
