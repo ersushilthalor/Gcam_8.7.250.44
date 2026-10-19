@@ -51,7 +51,7 @@ packageInfo:
   renameManifestPackage: null
 sdkInfo:
   minSdkVersion: '33'
-  targetSdkVersion: '33'
+  targetSdkVersion: '32'
 sharedLibrary: false
 sparseResources: false
 unknownFiles:
