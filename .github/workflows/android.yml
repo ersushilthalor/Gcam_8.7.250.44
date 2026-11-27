@@ -120,7 +120,9 @@ jobs:
           printf '%s\n' "$BADGING" | grep -E '^(package:|sdkVersion:|targetSdkVersion:|native-code:)'
           printf '%s\n' "$BADGING" | grep -q "^package: name='com.gcam'"
           MANIFEST_TREE=$("$AAPT2" dump xmltree "$APK" --file AndroidManifest.xml)
-          MIN_SDK=$(printf '%s\n' "$MANIFEST_TREE" | awk '/E: uses-sdk/ { in_uses_sdk=1; next } in_uses_sdk && /android:minSdkVersion/ { value=$0; sub(/^.*=/, "", value); sub(/[^0-9].*$/, "", value); print value; exit }')
+          printf '%s\n' "$MANIFEST_TREE" > "$RUNNER_TEMP/manifest-tree.txt"
+          grep -A 6 'E: uses-sdk' "$RUNNER_TEMP/manifest-tree.txt" || true
+          MIN_SDK=$(awk '/E: uses-sdk/ { in_uses_sdk=1; next } in_uses_sdk && /android:minSdkVersion/ { value=$0; sub(/^.*=/, "", value); sub(/[^0-9].*$/, "", value); print value; found=1; in_uses_sdk=0 } END { if (!found) exit 1 }' "$RUNNER_TEMP/manifest-tree.txt")
           if [ "$MIN_SDK" != "33" ]; then
             echo "::error::Expected minSdk 33 in compiled manifest; found '${MIN_SDK:-missing}'."
             exit 1
