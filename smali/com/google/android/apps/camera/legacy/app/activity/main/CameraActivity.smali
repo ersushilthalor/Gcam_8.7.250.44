@@ -170,6 +170,8 @@
     .line 3
     invoke-super/range {p0 .. p1}, Lejd;->onCreate(Landroid/os/Bundle;)V
 
+    invoke-static/range {p0 .. p0}, Lcom/pairip/CrashDiagnostics;->showIfPending(Landroid/app/Activity;)V
+
     .line 4
     invoke-virtual/range {p0 .. p0}, Lcom/google/android/apps/camera/legacy/app/activity/main/CameraActivity;->getApplicationContext()Landroid/content/Context;
 
