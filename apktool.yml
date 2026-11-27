@@ -26,17 +26,24 @@ doNotCompress:
 - assets/phenotype/com_google_android_gms_clearcut_client_package_metadata.binarypb
 - assets/phenotype/com_google_android_libraries_consentverifier_package_metadata.binarypb
 - assets/phenotype/com_google_android_libraries_performance_primes_package_metadata.binarypb
+- lib/arm64-v8a/libcyclops.so
+- lib/arm64-v8a/libdeeprestore.so
 - lib/arm64-v8a/libeglimage.so
 - lib/arm64-v8a/libfilterframework_jni.so
 - lib/arm64-v8a/libgcamuxer.so
+- lib/arm64-v8a/libgcastartup.so
 - lib/arm64-v8a/libhalide_hexagon_host.so
 - lib/arm64-v8a/libimage.so
 - lib/arm64-v8a/libl2l_video_processor_utils_jni.so
+- lib/arm64-v8a/liblightcycle.so
 - lib/arm64-v8a/libnative.so
 - lib/arm64-v8a/libnative_crash_handler_jni.so
 - lib/arm64-v8a/libnative_utils_android.so
 - lib/arm64-v8a/liboliveoil.so
 - lib/arm64-v8a/libpairipcore.so
+- lib/arm64-v8a/libsaliency_predictor_jni.so
+- lib/arm64-v8a/libsmartcapture_native.so
+- lib/arm64-v8a/libspeechenhancer_jni_avenhrealtimenative.so
 - png
 - ogg
 - res/raw/com_google_android_libraries_performance_primes_heterodyne_info
@@ -51,7 +58,7 @@ packageInfo:
   renameManifestPackage: null
 sdkInfo:
   minSdkVersion: '33'
-  targetSdkVersion: '32'
+  targetSdkVersion: '33'
 sharedLibrary: false
 sparseResources: false
 unknownFiles:
