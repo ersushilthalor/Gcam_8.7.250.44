@@ -32,7 +32,7 @@
         android:required="true" />
     <uses-feature
         android:name="com.google.android.feature.GOOGLE_EXPERIENCE"
-        android:required="true" />
+        android:required="false" />
     <supports-screens
         android:anyDensity="true"
         android:smallScreens="false"
