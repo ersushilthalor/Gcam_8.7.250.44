@@ -35,7 +35,7 @@ jobs:
       - name: Install Apktool
         run: |
           curl --fail --location --retry 3 \
-            https://github.com/iBotPeaches/Apktool/releases/download/v2.10.0/apktool_2.10.0.jar \
+            https://github.com/iBotPeaches/Apktool/releases/download/v2.12.1/apktool_2.12.1.jar \
             --output "$RUNNER_TEMP/apktool.jar"
           printf '#!/usr/bin/env bash\nexec java -jar "%s" "$@"\n' "$RUNNER_TEMP/apktool.jar" > "$RUNNER_TEMP/apktool"
           chmod +x "$RUNNER_TEMP/apktool"
@@ -67,17 +67,26 @@ jobs:
 
       - name: Align APK
         run: |
-          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -P 4 -f 4 \
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -P 16 -f 4 \
             build/gcam-unsigned.apk build/gcam-aligned.apk
+
+      - name: Restore persistent debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/gcam-debug.keystore
+          key: gcam-debug-signing-key-v1
 
       - name: Create debug signing key
         run: |
-          keytool -genkeypair -v \
-            -keystore "$RUNNER_TEMP/gcam-debug.keystore" \
-            -storepass android -keypass android \
-            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
-
+          if [ ! -s "$RUNNER_TEMP/gcam-debug.keystore" ]; then
+            keytool -genkeypair -v \
+              -keystore "$RUNNER_TEMP/gcam-debug.keystore" \
+              -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          else
+            echo "Using persistent debug signing key."
+          fi
       - name: Sign APK
         run: |
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign \
@@ -85,6 +94,12 @@ jobs:
             --ks-key-alias androiddebugkey \
             --ks-pass pass:android --key-pass pass:android \
             --out build/GCam-8.7.250.44-debug.apk build/gcam-aligned.apk
+
+      - name: Verify APK archive integrity
+        run: |
+          set -euo pipefail
+          unzip -t build/GCam-8.7.250.44-debug.apk >/dev/null
+          echo "APK ZIP central directory and CRC checks passed."
 
       - name: Verify native libraries are stored
         run: |
@@ -104,7 +119,7 @@ jobs:
       - name: Verify APK alignment
         run: |
           set -euo pipefail
-          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 4 -v 4 build/GCam-8.7.250.44-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 16 -v 4 build/GCam-8.7.250.44-debug.apk
 
       - name: Verify APK signature
         run: |
@@ -119,6 +134,10 @@ jobs:
           BADGING=$("$AAPT2" dump badging "$APK")
           printf '%s\n' "$BADGING" | grep -E '^(package:|sdkVersion:|targetSdkVersion:|native-code:)'
           printf '%s\n' "$BADGING" | grep -q "^package: name='com.google.android.GoogleCamera'"
+          if printf '%s\n' "$BADGING" | grep -q "^uses-feature: name='com.google.android.feature.GOOGLE_EXPERIENCE'"; then
+            echo "::error::Pixel-only GOOGLE_EXPERIENCE must not be a required install feature."
+            exit 1
+          fi
           MANIFEST_TREE=$("$AAPT2" dump xmltree "$APK" --file AndroidManifest.xml)
           printf '%s\n' "$MANIFEST_TREE" > "$RUNNER_TEMP/manifest-tree.txt"
           grep -A 6 'E: uses-sdk' "$RUNNER_TEMP/manifest-tree.txt" || true
