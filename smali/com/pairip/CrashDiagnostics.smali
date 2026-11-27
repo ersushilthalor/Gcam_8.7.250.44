@@ -29,9 +29,6 @@
 .method public static showIfPending(Landroid/app/Activity;)V
     .locals 5
 
-    invoke-virtual {p0}, Landroid/content/Context;->getFileStreamPath(Ljava/lang/String;)Ljava/io/File;
-    move-result-object v0
-
     const-string v1, "gcam-last-crash.txt"
     invoke-virtual {p0, v1}, Landroid/content/Context;->getFileStreamPath(Ljava/lang/String;)Ljava/io/File;
     move-result-object v0
