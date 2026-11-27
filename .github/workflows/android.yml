@@ -51,6 +51,15 @@ jobs:
           test -d res
           echo "Found apktool.yml, AndroidManifest.xml, smali and res."
 
+      - name: Ensure startup native library
+        run: |
+          set -euo pipefail
+          bash RUNTHISFIRST.sh
+          if [ ! -s lib/arm64-v8a/libgcastartup.so ]; then
+            echo "::error::lib/arm64-v8a/libgcastartup.so is missing or empty after RUNTHISFIRST.sh."
+            exit 1
+          fi
+
       - name: Rebuild APK with Apktool
         run: |
           mkdir -p build
@@ -58,7 +67,7 @@ jobs:
 
       - name: Align APK
         run: |
-          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -p -f 4 \
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -P 4 -f 4 \
             build/gcam-unsigned.apk build/gcam-aligned.apk
 
       - name: Create debug signing key
@@ -76,8 +85,43 @@ jobs:
             --ks-key-alias androiddebugkey \
             --ks-pass pass:android --key-pass pass:android \
             --out build/GCam-8.7.250.44-debug.apk build/gcam-aligned.apk
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose \
-            build/GCam-8.7.250.44-debug.apk
+
+      - name: Verify native libraries are stored
+        run: |
+          set -euo pipefail
+          APK=build/GCam-8.7.250.44-debug.apk
+          unzip -v "$APK" 'lib/arm64-v8a/*.so' | tee "$RUNNER_TEMP/native-libs-unzip.txt"
+          grep -E 'lib/arm64-v8a/[^[:space:]]+\.so$' "$RUNNER_TEMP/native-libs-unzip.txt" > "$RUNNER_TEMP/native-lib-entries.txt"
+          expected_count=$(find lib/arm64-v8a -maxdepth 1 -type f -name '*.so' | wc -l)
+          actual_count=$(wc -l < "$RUNNER_TEMP/native-lib-entries.txt")
+          test "$actual_count" -gt 0
+          if [ "$actual_count" -ne "$expected_count" ]; then
+            echo "::error::Expected $expected_count native libraries in APK; found $actual_count."
+            exit 1
+          fi
+          awk '$2 != "Stored" { print "::error::Native library is not stored: " $NF; bad=1 } END { if (bad) exit 1 }' "$RUNNER_TEMP/native-lib-entries.txt"
+
+      - name: Verify APK alignment
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 4 -v 4 build/GCam-8.7.250.44-debug.apk
+
+      - name: Verify APK signature
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose build/GCam-8.7.250.44-debug.apk
+
+      - name: Inspect APK package metadata
+        run: |
+          set -euo pipefail
+          APK=build/GCam-8.7.250.44-debug.apk
+          AAPT2="$ANDROID_HOME/build-tools/35.0.0/aapt2"
+          BADGING=$("$AAPT2" dump badging "$APK")
+          printf '%s\n' "$BADGING" | grep -E '^(package:|sdkVersion:|targetSdkVersion:|native-code:)'
+          printf '%s\n' "$BADGING" | grep -q "^package: name='com.gcam'"
+          printf '%s\n' "$BADGING" | grep -q "^sdkVersion:'33'$"
+          printf '%s\n' "$BADGING" | grep -q "^targetSdkVersion:'33'$"
+          printf '%s\n' "$BADGING" | grep -q "^native-code:.*'arm64-v8a'"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
