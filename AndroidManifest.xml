@@ -194,7 +194,8 @@
         android:largeHeap="true"
         android:supportsRtl="true"
         android:fullBackupOnly="false"
-        android:extractNativeLibs="false"
+        android:extractNativeLibs="true"
+        android:pageSizeCompat="enabled"
         android:usesCleartextTraffic="false"
         android:gwpAsanMode="never">
         <uses-library
