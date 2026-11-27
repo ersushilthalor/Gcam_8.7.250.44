@@ -118,7 +118,7 @@ jobs:
           AAPT2="$ANDROID_HOME/build-tools/35.0.0/aapt2"
           BADGING=$("$AAPT2" dump badging "$APK")
           printf '%s\n' "$BADGING" | grep -E '^(package:|sdkVersion:|targetSdkVersion:|native-code:)'
-          printf '%s\n' "$BADGING" | grep -q "^package: name='com.gcam'"
+          printf '%s\n' "$BADGING" | grep -q "^package: name='com.google.android.GoogleCamera'"
           MANIFEST_TREE=$("$AAPT2" dump xmltree "$APK" --file AndroidManifest.xml)
           printf '%s\n' "$MANIFEST_TREE" > "$RUNNER_TEMP/manifest-tree.txt"
           grep -A 6 'E: uses-sdk' "$RUNNER_TEMP/manifest-tree.txt" || true
