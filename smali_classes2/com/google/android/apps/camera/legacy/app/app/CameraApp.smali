@@ -1463,6 +1463,8 @@
     .line 56
     invoke-static {}, Landroid/os/Trace;->endSection()V
 
+    invoke-static/range {p0 .. p0}, Lcom/pairip/CrashDiagnostics;->install(Landroid/content/Context;)V
+
     return-void
 
     .line 3
@@ -1501,6 +1503,8 @@
 
     .line 40
     :cond_8
+    invoke-static/range {p0 .. p0}, Lcom/pairip/CrashDiagnostics;->install(Landroid/content/Context;)V
+
     return-void
 
     :catchall_1
