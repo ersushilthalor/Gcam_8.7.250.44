@@ -2,7 +2,7 @@
 <manifest
     android:compileSdkVersion="33"
     android:compileSdkVersionCodename="UpsideDownCake"
-    package="com.google.android.GoogleCamera"
+    package="com.gcam"
     platformBuildVersionCode="33"
     platformBuildVersionName="UpsideDownCake"
     xmlns:android="http://schemas.android.com/apk/res/android">
@@ -379,7 +379,7 @@
                     android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="launch-camera"
-                    android:host="com.google.android.GoogleCamera"
+                    android:host="com.gcam"
                     android:path="/still-image" />
             </intent-filter>
         </activity-alias>
@@ -477,19 +477,19 @@
         <provider
             android:name="com.google.android.apps.camera.debug.contentprovider.DebugContentProvider"
             android:exported="true"
-            android:authorities="com.google.android.GoogleCamera.DebugContentProvider" />
+            android:authorities="com.gcam.DebugContentProvider" />
         <provider
             android:name="com.google.android.apps.camera.debug.shottracker.db.DbDebugDumper"
             android:exported="true"
-            android:authorities="com.google.android.GoogleCamera.DbDebugDumper" />
+            android:authorities="com.gcam.DbDebugDumper" />
         <provider
             android:name="com.google.android.apps.camera.debug.metrics.MetricsProvider"
             android:exported="true"
-            android:authorities="com.google.android.GoogleCamera.MetricsProvider" />
+            android:authorities="com.gcam.MetricsProvider" />
         <provider
             android:name="com.google.android.apps.camera.cameravisionkit.ScanDocumentBitmapFileProvider"
             android:exported="false"
-            android:authorities="com.google.android.GoogleCamera.fileprovider"
+            android:authorities="com.gcam.fileprovider"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
@@ -575,7 +575,7 @@
             android:enabled="true"
             android:exported="true"
             android:multiprocess="false"
-            android:authorities="com.google.android.GoogleCamera"
+            android:authorities="com.gcam"
             android:grantUriPermissions="true">
             <intent-filter>
                 <action
@@ -703,7 +703,7 @@
             android:exported="false"
             android:process=":learning_bg"
             android:multiprocess="false"
-            android:authorities="com.google.android.GoogleCamera.brella.trainingservice.provider"
+            android:authorities="com.gcam.brella.trainingservice.provider"
             android:initOrder="0x7fffffff" />
         <service
             android:name="com.google.android.gms.learning.internal.training.InAppJobService"
