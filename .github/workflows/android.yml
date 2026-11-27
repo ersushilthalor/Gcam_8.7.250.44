@@ -119,7 +119,13 @@ jobs:
           BADGING=$("$AAPT2" dump badging "$APK")
           printf '%s\n' "$BADGING" | grep -E '^(package:|sdkVersion:|targetSdkVersion:|native-code:)'
           printf '%s\n' "$BADGING" | grep -q "^package: name='com.gcam'"
-          printf '%s\n' "$BADGING" | grep -q "^sdkVersion:'33'$"
+          MANIFEST_TREE=$("$AAPT2" dump xmltree "$APK" --file AndroidManifest.xml)
+          MIN_SDK=$(printf '%s\n' "$MANIFEST_TREE" | awk '/E: uses-sdk/ { in_uses_sdk=1; next } in_uses_sdk && /android:minSdkVersion/ { value=$0; sub(/^.*=/, "", value); sub(/[^0-9].*$/, "", value); print value; exit }')
+          if [ "$MIN_SDK" != "33" ]; then
+            echo "::error::Expected minSdk 33 in compiled manifest; found '${MIN_SDK:-missing}'."
+            exit 1
+          fi
+          echo "minSdk: $MIN_SDK"
           printf '%s\n' "$BADGING" | grep -q "^targetSdkVersion:'33'$"
           printf '%s\n' "$BADGING" | grep -q "^native-code:.*'arm64-v8a'"
 
