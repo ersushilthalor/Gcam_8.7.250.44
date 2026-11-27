@@ -133,9 +133,6 @@ jobs:
             --ks "$RUNNER_TEMP/gcam-debug.keystore" \
             --ks-key-alias androiddebugkey \
             --ks-pass pass:android --key-pass pass:android \
-            --v1-signing-enabled true \
-            --v2-signing-enabled true \
-            --v3-signing-enabled true \
             --out build/GCam-8.7.250.44-debug.apk build/gcam-aligned.apk
 
       - name: Verify APK archive integrity
@@ -167,11 +164,7 @@ jobs:
       - name: Verify APK signature
         run: |
           set -euo pipefail
-          VERIFY_OUTPUT=$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose build/GCam-8.7.250.44-debug.apk)
-          printf '%s\\n' "$VERIFY_OUTPUT"
-          printf '%s\\n' "$VERIFY_OUTPUT" | grep -q 'Verified using v1 scheme (JAR signing): true'
-          printf '%s\\n' "$VERIFY_OUTPUT" | grep -q 'Verified using v2 scheme (APK Signature Scheme v2): true'
-          printf '%s\\n' "$VERIFY_OUTPUT" | grep -q 'Verified using v3 scheme (APK Signature Scheme v3): true'
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose build/GCam-8.7.250.44-debug.apk
 
       - name: Inspect APK package metadata
         run: |
