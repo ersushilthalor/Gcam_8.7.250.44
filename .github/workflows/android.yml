@@ -60,6 +60,46 @@ jobs:
             exit 1
           fi
 
+      - name: Validate ARM64 native library ELF files
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          libraries=(lib/arm64-v8a/*.so)
+          if [ ${#libraries[@]} -lt 1 ]; then
+            echo "::error::No ARM64 native libraries were found."
+            exit 1
+          fi
+          for library in "${libraries[@]}"; do
+            description=$(file -b "$library")
+            case "$description" in
+              "ELF 64-bit LSB shared object, ARM aarch64"*) ;;
+              *)
+                echo "::error::Invalid or non-ARM64 native library: $library ($description)"
+                exit 1
+                ;;
+            esac
+            header=$(readelf -h "$library")
+            printf '%s\\n' "$header" | grep -q 'Class:.*ELF64'
+            printf '%s\\n' "$header" | grep -q 'Type:.*DYN'
+            printf '%s\\n' "$header" | grep -q 'Machine:.*AArch64'
+            mapfile -t load_alignments < <(readelf -lW "$library" | awk '$1 == "LOAD" { print $NF }')
+            if [ "${#load_alignments[@]}" -eq 0 ]; then
+              echo "::error::No PT_LOAD segments found in $library."
+              exit 1
+            fi
+            for alignment in "${load_alignments[@]}"; do
+              value=$((alignment))
+              if (( value < 4096 || (value & (value - 1)) != 0 )); then
+                echo "::error::Invalid PT_LOAD alignment $alignment in $library."
+                exit 1
+              fi
+              if (( value < 16384 )); then
+                echo "::warning::$library uses 4 KB ELF alignment; Android 16 KB page-size compatibility is enabled in the manifest."
+              fi
+            done
+          done
+          echo "Validated ${#libraries[@]} ARM64 ELF shared libraries."
+
       - name: Rebuild APK with Apktool
         run: |
           mkdir -p build
@@ -93,6 +133,9 @@ jobs:
             --ks "$RUNNER_TEMP/gcam-debug.keystore" \
             --ks-key-alias androiddebugkey \
             --ks-pass pass:android --key-pass pass:android \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
             --out build/GCam-8.7.250.44-debug.apk build/gcam-aligned.apk
 
       - name: Verify APK archive integrity
@@ -124,7 +167,11 @@ jobs:
       - name: Verify APK signature
         run: |
           set -euo pipefail
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose build/GCam-8.7.250.44-debug.apk
+          VERIFY_OUTPUT=$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose build/GCam-8.7.250.44-debug.apk)
+          printf '%s\\n' "$VERIFY_OUTPUT"
+          printf '%s\\n' "$VERIFY_OUTPUT" | grep -q 'Verified using v1 scheme (JAR signing): true'
+          printf '%s\\n' "$VERIFY_OUTPUT" | grep -q 'Verified using v2 scheme (APK Signature Scheme v2): true'
+          printf '%s\\n' "$VERIFY_OUTPUT" | grep -q 'Verified using v3 scheme (APK Signature Scheme v3): true'
 
       - name: Inspect APK package metadata
         run: |
