@@ -11,7 +11,7 @@
         android:targetSdkVersion="33" />
     <uses-feature
         android:name="android.hardware.camera.level.full"
-        android:required="true" />
+        android:required="false" />
     <uses-feature
         android:name="android.hardware.location"
         android:required="false" />
@@ -29,7 +29,7 @@
         android:required="true" />
     <uses-feature
         android:name="android.hardware.microphone"
-        android:required="true" />
+        android:required="false" />
     <uses-feature
         android:name="com.google.android.feature.GOOGLE_EXPERIENCE"
         android:required="false" />
