@@ -583,6 +583,14 @@
 
     check-cast v0, Lcom/google/googlex/gcam/InitParams;
 
+    # Allow the native engine to use its generic fallback when this device
+    # does not have a Pixel-specific tuning entry (e.g. Motorola cuscoi).
+    const/4 v1, 0x1
+
+    iget-wide v2, v0, Lcom/google/googlex/gcam/InitParams;->a:J
+
+    invoke-static {v2, v3, v0, v1}, Lcom/google/googlex/gcam/GcamModuleJNI;->InitParams_allow_unknown_devices_set(JLcom/google/googlex/gcam/InitParams;Z)V
+
     iget-wide v9, v0, Lcom/google/googlex/gcam/InitParams;->a:J
 
     iget-wide v12, v14, Lcom/google/googlex/gcam/FloatArray2;->a:J
@@ -654,9 +662,14 @@
 
     if-nez v5, :cond_f
 
-    const/4 v0, 0x0
+    # Do not dereference a null native engine; report the remaining init failure.
+    new-instance v1, Ljava/lang/IllegalStateException;
 
-    goto :goto_7
+    const-string v2, "GCam native initialization returned a null engine even with unknown-device fallback enabled."
+
+    invoke-direct {v1, v2}, Ljava/lang/IllegalStateException;-><init>(Ljava/lang/String;)V
+
+    throw v1
 
     .line 59
     :cond_f
