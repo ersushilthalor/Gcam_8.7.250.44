@@ -50,6 +50,10 @@
     invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
     move-result-object v0
 
+    # Export first so reports remain accessible even when no Activity can start.
+    iget-object v1, p0, Lcom/pairip/CrashDiagnostics$Handler;->context:Landroid/content/Context;
+    invoke-static {v1, v0}, Lcom/pairip/CrashDiagnostics;->savePublicReport(Landroid/content/Context;Ljava/lang/String;)V
+
     :try_start_0
     iget-object v1, p0, Lcom/pairip/CrashDiagnostics$Handler;->context:Landroid/content/Context;
     const-string v2, "gcam-last-crash.txt"
