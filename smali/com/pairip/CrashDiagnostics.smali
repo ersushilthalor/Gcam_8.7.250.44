@@ -33,7 +33,8 @@
     new-instance v0, Landroid/content/ContentValues;
     invoke-direct {v0}, Landroid/content/ContentValues;-><init>()V
 
-    const-string v1, "display_name"
+    # MediaStore.MediaColumns.DISPLAY_NAME is "_display_name".
+    const-string v1, "_display_name"
     const-string v2, "GCam-crash-diagnosis.txt"
     invoke-virtual {v0, v1, v2}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
 
