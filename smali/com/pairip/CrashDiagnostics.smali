@@ -26,6 +26,60 @@
     return-void
 .end method
 
+.method public static savePublicReport(Landroid/content/Context;Ljava/lang/String;)V
+    .locals 5
+
+    :try_start_public
+    new-instance v0, Landroid/content/ContentValues;
+    invoke-direct {v0}, Landroid/content/ContentValues;-><init>()V
+
+    const-string v1, "display_name"
+    const-string v2, "GCam-crash-diagnosis.txt"
+    invoke-virtual {v0, v1, v2}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
+
+    const-string v1, "mime_type"
+    const-string v2, "text/plain"
+    invoke-virtual {v0, v1, v2}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
+
+    const-string v1, "relative_path"
+    const-string v2, "Download/"
+    invoke-virtual {v0, v1, v2}, Landroid/content/ContentValues;->put(Ljava/lang/String;Ljava/lang/String;)V
+
+    invoke-virtual {p0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+    move-result-object v1
+
+    sget-object v2, Landroid/provider/MediaStore$Downloads;->EXTERNAL_CONTENT_URI:Landroid/net/Uri;
+    invoke-virtual {v1, v2, v0}, Landroid/content/ContentResolver;->insert(Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;
+    move-result-object v2
+
+    if-eqz v2, :public_done
+
+    invoke-virtual {v1, v2}, Landroid/content/ContentResolver;->openOutputStream(Landroid/net/Uri;)Ljava/io/OutputStream;
+    move-result-object v3
+
+    if-eqz v3, :public_done
+
+    const-string v4, "UTF-8"
+    invoke-virtual {p1, v4}, Ljava/lang/String;->getBytes(Ljava/lang/String;)[B
+    move-result-object v4
+
+    invoke-virtual {v3, v4}, Ljava/io/OutputStream;->write([B)V
+    invoke-virtual {v3}, Ljava/io/OutputStream;->flush()V
+    invoke-virtual {v3}, Ljava/io/OutputStream;->close()V
+    :try_end_public
+    .catch Ljava/lang/Throwable; {:try_start_public .. :try_end_public} :catch_public
+
+    :public_done
+    return-void
+
+    :catch_public
+    move-exception v0
+    const-string v1, "GCamCrashDiagnostics"
+    const-string v2, "Could not export crash report to Downloads"
+    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+    return-void
+.end method
+
 .method public static showIfPending(Landroid/app/Activity;)V
     .locals 5
 
