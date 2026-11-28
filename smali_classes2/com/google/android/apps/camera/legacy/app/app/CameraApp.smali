@@ -1395,7 +1395,8 @@
 
     move-result v3
 
-    if-eqz v3, :cond_6
+    # Non-Pixel devices skip Pixel-only lifecycle initialization and continue common startup.
+    if-eqz v3, :cond_5
 
     sget-object v3, Llca;->a:Llca;
 
